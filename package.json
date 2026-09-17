@@ -1,0 +1,13 @@
+{
+  "name": "makhzani-saas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de gestión de inventario y ventas para tiendas",
+  "scripts": {
+    "start": "npx http-server . -p 8080",
+    "dev": "npx http-server . -p 8080"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
