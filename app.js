@@ -161,7 +161,7 @@ function renderLogin() {
       <div class="field"><label for="username">البريد الإلكتروني</label><input id="username" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
       <div class="field"><label for="password">الرقم السري</label><input id="password" type="password" autocomplete="current-password" required placeholder="اكتب الرقم السري" /></div>
       <div class="error" id="login-error"></div><button class="primary" type="submit">دخول إلى لوحة التحكم</button>
-      <button class="ghost" id="signup-button" type="button">إنشاء حساب جديد</button>
+      <a class="ghost" href="mailto:azizhail1212@gmail.com?subject=طلب دعوة إلى مخزني&body=مرحبًا، أرغب في الحصول على دعوة لاستخدام تطبيق مخزني.%0Aاسم المتجر:%0Aالاسم:%0Aالبريد الإلكتروني:" style="display:block;text-align:center;text-decoration:none">طلب دعوة لاستخدام التطبيق</a>
     </form></div>
   </section>`;
   document.getElementById('login-form').addEventListener('submit', async event => {
@@ -181,30 +181,6 @@ function renderLogin() {
     localStorage.setItem(SESSION_KEY, data.user.email);
     await loadCloudDataIfAvailable();
     renderDashboard();
-  });
-  document.getElementById('signup-button').addEventListener('click', async () => {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const error = document.getElementById('login-error');
-    if (!window.makhzaniSupabase) {
-      error.textContent = 'تعذر الاتصال بخدمة تسجيل الدخول.';
-      return;
-    }
-    const { data, error: authError } = await window.makhzaniSupabase.auth.signUp({
-      email: username,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
-    });
-    if (authError) {
-      error.textContent = authError.message;
-      return;
-    }
-    if (data.session) {
-      localStorage.setItem(SESSION_KEY, data.user.email);
-      renderDashboard();
-    } else {
-      error.textContent = 'تم إنشاء الحساب. تحقق من بريدك الإلكتروني ثم سجّل الدخول.';
-    }
   });
 }
 
