@@ -15,13 +15,6 @@ const supabaseClient = window.supabase && !supabaseUrl.includes('your-project')
 window.makhzaniSupabase = supabaseClient;
 window.MAKHZANI_SUPABASE_READY = Boolean(supabaseClient);
 
-window.requestShopInvite = async function requestShopInvite(payload) {
-  if (!supabaseClient) return { ok: false, message: 'تعذر الاتصال بخدمة الطلبات.' };
-  const { data, error } = await supabaseClient.functions.invoke('request-shop-invite', { body: payload });
-  if (error) return { ok: false, message: 'تعذر إرسال الطلب حاليًا.' };
-  return data || { ok: false, message: 'تعذر إرسال الطلب حاليًا.' };
-};
-
 async function getCurrentShopId() {
   if (!supabaseClient) return null;
   const { data: { session } } = await supabaseClient.auth.getSession();
