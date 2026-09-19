@@ -73,6 +73,19 @@
 
 ### الخطوة 4: ربط الواجهة الأمامية
 
+### الخطوة 5: دعوات أصحاب المتاجر
+
+التسجيل العام متوقف. يرسل صاحب المتجر طلب دعوة من التطبيق، ثم تصل رسالة إلى بريد المالك وتحتوي على زر موافقة واحد. بعد الموافقة يرسل Supabase دعوة الدخول إلى بريد صاحب المتجر.
+
+لتشغيل إرسال الطلبات، انشر الدالة `supabase/functions/request-shop-invite/index.ts` كـ Supabase Edge Function واضبط الأسرار التالية في إعدادات الدالة:
+
+- `OWNER_EMAIL=azizhail1212@gmail.com`
+- `APP_URL=https://makzani.vercel.app`
+- `RESEND_API_KEY` من حساب Resend
+- `MAIL_FROM` من نطاق موثق في Resend
+
+لا تضع `RESEND_API_KEY` أو `SUPABASE_SERVICE_ROLE_KEY` في ملفات الواجهة أو GitHub.
+
 1. أضف ملف `supabase/client.js` إلى المشروع
 2. استبدل القيم:
    - `YOUR_SUPABASE_URL`

@@ -25,6 +25,19 @@ create table if not exists public.shop_members (
   unique (shop_id, user_id)
 );
 
+create table if not exists public.shop_access_requests (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  shop_name text not null,
+  email text not null,
+  approval_token_hash text not null unique,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  created_at timestamptz not null default now(),
+  approved_at timestamptz
+);
+
+revoke all on public.shop_access_requests from anon, authenticated;
+
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   shop_id uuid not null references public.shops(id) on delete cascade,

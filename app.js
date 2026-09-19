@@ -161,7 +161,7 @@ function renderLogin() {
       <div class="field"><label for="username">البريد الإلكتروني</label><input id="username" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
       <div class="field"><label for="password">الرقم السري</label><input id="password" type="password" autocomplete="current-password" required placeholder="اكتب الرقم السري" /></div>
       <div class="error" id="login-error"></div><button class="primary" type="submit">دخول إلى لوحة التحكم</button>
-      <a class="ghost" href="mailto:azizhail1212@gmail.com?subject=طلب دعوة إلى مخزني&body=مرحبًا، أرغب في الحصول على دعوة لاستخدام تطبيق مخزني.%0Aاسم المتجر:%0Aالاسم:%0Aالبريد الإلكتروني:" style="display:block;text-align:center;text-decoration:none">طلب دعوة لاستخدام التطبيق</a>
+      <button class="ghost" id="request-invite" type="button">طلب دعوة لاستخدام التطبيق</button>
     </form></div>
   </section>`;
   document.getElementById('login-form').addEventListener('submit', async event => {
@@ -181,6 +181,45 @@ function renderLogin() {
     localStorage.setItem(SESSION_KEY, data.user.email);
     await loadCloudDataIfAvailable();
     renderDashboard();
+  });
+  document.getElementById('request-invite').addEventListener('click', () => openInviteRequestModal());
+}
+
+function openInviteRequestModal() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'modal-backdrop';
+  wrapper.innerHTML = `<div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h2>طلب دعوة</h2><button class="close" id="close-invite-request" type="button">×</button></div>
+    <form id="invite-request-form">
+      <div class="field"><label for="request-name">اسمك</label><input id="request-name" required /></div>
+      <div class="field"><label for="request-shop">اسم المتجر</label><input id="request-shop" required /></div>
+      <div class="field"><label for="request-email">بريدك الإلكتروني</label><input id="request-email" type="email" required /></div>
+      <div class="error" id="invite-request-error"></div>
+      <div class="modal-actions"><button class="ghost" id="cancel-invite-request" type="button">إلغاء</button><button class="primary" type="submit">إرسال الطلب</button></div>
+    </form>
+  </div>`;
+  document.body.appendChild(wrapper);
+  const close = () => wrapper.remove();
+  wrapper.querySelector('#close-invite-request').addEventListener('click', close);
+  wrapper.querySelector('#cancel-invite-request').addEventListener('click', close);
+  wrapper.addEventListener('click', event => { if (event.target === wrapper) close(); });
+  wrapper.querySelector('#invite-request-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const error = wrapper.querySelector('#invite-request-error');
+    const button = wrapper.querySelector('button[type="submit"]');
+    button.disabled = true;
+    const result = await window.requestShopInvite?.({
+      name: wrapper.querySelector('#request-name').value.trim(),
+      shopName: wrapper.querySelector('#request-shop').value.trim(),
+      email: wrapper.querySelector('#request-email').value.trim()
+    });
+    if (!result?.ok) {
+      error.textContent = result?.message || 'تعذر إرسال الطلب. حاول مرة أخرى.';
+      button.disabled = false;
+      return;
+    }
+    wrapper.querySelector('form').innerHTML = '<p class="lead">تم إرسال طلبك. سيصلك رابط الدعوة بعد موافقة الإدارة.</p><div class="modal-actions"><button class="primary" type="button" id="done-invite-request">إغلاق</button></div>';
+    wrapper.querySelector('#done-invite-request').addEventListener('click', close);
   });
 }
 
