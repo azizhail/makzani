@@ -110,10 +110,20 @@ returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
+declare
+  new_shop_id uuid;
 begin
   insert into public.profiles (id, full_name)
   values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', 'مستخدم'))
   on conflict (id) do nothing;
+
+  insert into public.shops (name, owner_id)
+  values ('متجر ' || coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)), new.id)
+  returning id into new_shop_id;
+
+  insert into public.shop_members (shop_id, user_id, role)
+  values (new_shop_id, new.id, 'owner');
+
   return new;
 end;
 $$;

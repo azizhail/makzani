@@ -1,7 +1,8 @@
 const supabaseUrl = window.MAKHZANI_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = window.MAKHZANI_SUPABASE_ANON_KEY || 'your-anon-key';
 
-const supabaseClient = window.supabase && !supabaseUrl.includes('your-project') && !supabaseAnonKey.includes('your-anon')
+const supabaseClient = window.supabase && !supabaseUrl.includes('your-project')
+  && !supabaseAnonKey.includes('your-anon')
   ? window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,

@@ -8,7 +8,7 @@ const CUSTOMERS_KEY = 'makhzani-customers';
 const SUPPLIERS_KEY = 'makhzani-suppliers';
 const SESSION_KEY = 'makhzani-session';
 const CREDENTIALS_KEY = 'makhzani-credentials';
-const DEFAULT_CREDENTIALS = { username: 'admin', password: '1234' };
+const DEFAULT_CREDENTIALS = { username: '', password: '' };
 const SUPABASE_READY = Boolean(window.makhzaniSupabase);
 let credentials = JSON.parse(localStorage.getItem(CREDENTIALS_KEY) || 'null') || DEFAULT_CREDENTIALS;
 let currentView = 'dashboard';
@@ -158,22 +158,52 @@ function renderLogin() {
     </div>
     <div class="login-panel"><form class="login-card" id="login-form">
       <h2>تسجيل الدخول</h2><p class="lead">أدخل بيانات الحساب للوصول إلى لوحة المبيعات</p>
-      <div class="field"><label for="username">اسم المستخدم</label><input id="username" autocomplete="username" required placeholder="اكتب اسم المستخدم" /></div>
+      <div class="field"><label for="username">البريد الإلكتروني</label><input id="username" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
       <div class="field"><label for="password">الرقم السري</label><input id="password" type="password" autocomplete="current-password" required placeholder="اكتب الرقم السري" /></div>
       <div class="error" id="login-error"></div><button class="primary" type="submit">دخول إلى لوحة التحكم</button>
-      <p class="demo-hint">للتجربة: اسم المستخدم <b>admin</b> والرقم السري <b>1234</b></p>
+      <button class="ghost" id="signup-button" type="button">إنشاء حساب جديد</button>
     </form></div>
   </section>`;
-  document.getElementById('login-form').addEventListener('submit', event => {
+  document.getElementById('login-form').addEventListener('submit', async event => {
     event.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     const error = document.getElementById('login-error');
-    if (username === credentials.username && password === credentials.password) {
-      localStorage.setItem(SESSION_KEY, username);
+    if (!window.makhzaniSupabase) {
+      error.textContent = 'تعذر الاتصال بخدمة تسجيل الدخول.';
+      return;
+    }
+    const { data, error: authError } = await window.makhzaniSupabase.auth.signInWithPassword({ email: username, password });
+    if (authError) {
+      error.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+      return;
+    }
+    localStorage.setItem(SESSION_KEY, data.user.email);
+    await loadCloudDataIfAvailable();
+    renderDashboard();
+  });
+  document.getElementById('signup-button').addEventListener('click', async () => {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const error = document.getElementById('login-error');
+    if (!window.makhzaniSupabase) {
+      error.textContent = 'تعذر الاتصال بخدمة تسجيل الدخول.';
+      return;
+    }
+    const { data, error: authError } = await window.makhzaniSupabase.auth.signUp({
+      email: username,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+    });
+    if (authError) {
+      error.textContent = authError.message;
+      return;
+    }
+    if (data.session) {
+      localStorage.setItem(SESSION_KEY, data.user.email);
       renderDashboard();
     } else {
-      error.textContent = 'اسم المستخدم أو الرقم السري غير صحيح.';
+      error.textContent = 'تم إنشاء الحساب. تحقق من بريدك الإلكتروني ثم سجّل الدخول.';
     }
   });
 }
@@ -259,6 +289,7 @@ function renderDashboard() {
 
   document.getElementById('logout').addEventListener('click', () => {
     localStorage.removeItem(SESSION_KEY);
+    if (window.makhzaniSupabase) window.makhzaniSupabase.auth.signOut();
     renderLogin();
   });
   document.getElementById('account').addEventListener('click', openAccountModal);
@@ -1225,11 +1256,16 @@ function payReceivable(id) {
 }
 
 if (window.makhzaniSupabase) {
-  loadCloudDataIfAvailable().finally(() => {
-    if (localStorage.getItem(SESSION_KEY)) renderDashboard(); else renderLogin();
+  window.makhzaniSupabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) {
+      localStorage.removeItem(SESSION_KEY);
+      renderLogin();
+      return;
+    }
+    localStorage.setItem(SESSION_KEY, session.user.email);
+    await loadCloudDataIfAvailable();
+    renderDashboard();
   });
-} else if (localStorage.getItem(SESSION_KEY)) {
-  renderDashboard();
 } else {
   renderLogin();
 }
