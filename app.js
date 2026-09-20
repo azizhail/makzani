@@ -40,13 +40,13 @@ async function loadCloudDataIfAvailable() {
     if (!session) return;
 
     const cloudData = await window.loadShopData();
-    if (cloudData.products?.length) products = cloudData.products.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.sales?.length) sales = cloudData.sales.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.purchases?.length) purchases = cloudData.purchases.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.expenses?.length) expenses = cloudData.expenses.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.cash_flow?.length) cashFlow = cloudData.cash_flow.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.customers?.length) customers = cloudData.customers.map(item => ({ ...item, id: Number(item.id) || item.id }));
-    if (cloudData.suppliers?.length) suppliers = cloudData.suppliers.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    products = cloudData.products.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    sales = cloudData.sales.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    purchases = cloudData.purchases.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    expenses = cloudData.expenses.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    cashFlow = cloudData.cash_flow.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    customers = cloudData.customers.map(item => ({ ...item, id: Number(item.id) || item.id }));
+    suppliers = cloudData.suppliers.map(item => ({ ...item, id: Number(item.id) || item.id }));
   } catch (error) {
     console.warn('Cloud sync unavailable. Falling back to local data.', error);
   }
@@ -1283,6 +1283,10 @@ if (window.makhzaniSupabase) {
       localStorage.removeItem(SESSION_KEY);
       renderLogin();
       return;
+    }
+    const previousSession = localStorage.getItem(SESSION_KEY);
+    if (previousSession && previousSession !== session.user.email) {
+      [STORAGE_KEY, SALES_KEY, PURCHASES_KEY, EXPENSES_KEY, CASHFLOW_KEY, CUSTOMERS_KEY, SUPPLIERS_KEY].forEach(key => localStorage.removeItem(key));
     }
     localStorage.setItem(SESSION_KEY, session.user.email);
     await loadCloudDataIfAvailable();
