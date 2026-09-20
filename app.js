@@ -185,6 +185,33 @@ function renderLogin() {
   document.getElementById('request-invite').addEventListener('click', openInviteRequestModal);
 }
 
+function isInviteCallback() {
+  const query = new URLSearchParams(window.location.search);
+  return query.get('type') === 'invite' || window.location.hash.includes('type=invite');
+}
+
+function renderInvitePassword(session) {
+  app.innerHTML = `<section class="login-shell"><div class="login-panel" style="margin:auto"><form class="login-card" id="invite-password-form">
+    <h2>تفعيل حساب المتجر</h2><p class="lead">أنشئ كلمة مرور لحساب ${escapeHtml(session?.user?.email || '')}</p>
+    <div class="field"><label for="invite-password">كلمة المرور الجديدة</label><input id="invite-password" type="password" minlength="6" required placeholder="ستة أحرف على الأقل" /></div>
+    <div class="field"><label for="invite-password-confirm">تأكيد كلمة المرور</label><input id="invite-password-confirm" type="password" minlength="6" required placeholder="أعد كتابة كلمة المرور" /></div>
+    <div class="error" id="invite-password-error"></div><button class="primary" type="submit">تفعيل الحساب</button>
+  </form></div></section>`;
+  document.getElementById('invite-password-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const password = document.getElementById('invite-password').value;
+    const confirmation = document.getElementById('invite-password-confirm').value;
+    const error = document.getElementById('invite-password-error');
+    if (password !== confirmation) { error.textContent = 'كلمتا المرور غير متطابقتين.'; return; }
+    const { error: updateError } = await window.makhzaniSupabase.auth.updateUser({ password });
+    if (updateError) { error.textContent = updateError.message; return; }
+    window.history.replaceState({}, document.title, window.location.pathname);
+    localStorage.setItem(SESSION_KEY, session.user.email);
+    await loadCloudDataIfAvailable();
+    renderDashboard();
+  });
+}
+
 function openInviteRequestModal() {
   const wrapper = document.createElement('div');
   wrapper.className = 'modal-backdrop';
@@ -1279,6 +1306,11 @@ function payReceivable(id) {
 
 if (window.makhzaniSupabase) {
   window.makhzaniSupabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (isInviteCallback()) {
+      if (session) renderInvitePassword(session);
+      else renderLogin();
+      return;
+    }
     if (!session) {
       localStorage.removeItem(SESSION_KEY);
       renderLogin();
